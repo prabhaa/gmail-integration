@@ -1,0 +1,33 @@
+{
+    "rule_1" : {
+        "predicates" : ["All"],
+        "criteria" : [{
+            "field_name" : ["From"],
+            "predicate" : ["contains"],
+            "value" : "swiggy"
+        },{
+            "field_name" : ["Subject"],
+            "predicate" : ["contains"],
+            "value" : "python"
+        }],
+        "action_1" : {
+            "apply" : ["Move"],
+            "apply_to" : ["Spam"]
+        }
+    },
+    "rule_2" : {
+        "predicates" : ["Any"],
+        "criteria" : [{
+            "field_name" : ["From"],
+            "predicate" : ["contains"],
+            "value" : "google"
+        },{
+            "field_name" : ["Subject"],
+            "predicate" : ["contains"],
+            "value" : "Airtel"
+        }],
+        "action_1" : {
+            "apply" : ["Mark as read"]
+        }
+    }
+}
