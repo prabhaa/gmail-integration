@@ -1,11 +1,8 @@
 from os import path
 import yaml
 # google oauth lib's
-from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 
 
@@ -32,9 +29,8 @@ class OAuth_Token:
     def validating_credentials(self):
         if not path.exists("token_keys.json"):
             status_token = self.writing_token()
-        if status_token:
+        else:
             creds = Credentials.from_authorized_user_file("token_keys.json", self.constants["SCOPE"])
             return creds
-        else:
-            raise RuntimeError("Connection issues with Oauth server")
+        raise RuntimeError("Connection issues with Oauth server")
 

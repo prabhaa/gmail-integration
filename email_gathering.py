@@ -1,5 +1,4 @@
 from os import path
-import yaml
 import base64
 from email import message_from_string
 import pandas as pd
@@ -14,15 +13,13 @@ from Oauth_integration import OAuth_Token
 class Fetching_Inbox:
 
     def __init__(self):
-        # getting the scopes from the constant file
-        with open("constants.yaml","r") as data:
-            constants = yaml.full_load(data.read())
         # checking credential
         self.creds = OAuth_Token().validating_credentials()
 
     def fetching_email(self):
         try:
             service = build('gmail', 'v1', credentials=self.creds)
+            # Getting the list of emails from the inbox with a set limit of the first 10 records.
             message_data = service.users().messages().list(userId='me', labelIds=['INBOX'],maxResults=10).execute()
             messages = message_data.get('messages', [])
             inbox_data = []
@@ -35,8 +32,8 @@ class Fetching_Inbox:
                     pass
                 else:
                     content_data = {
-                        "from" : parsed_data.get("From"),
-                        "to" : parsed_data.get("To"),
+                        "e_from" : parsed_data.get("From"),
+                        "e_to" : parsed_data.get("To"),
                         "date" : parsed_data.get("Date"),
                         "message_id" : message_data.get("id"),
                         "content_type" : parsed_data.get("Content-Type"),
@@ -54,7 +51,7 @@ class Fetching_Inbox:
             print(f"email fetching - {error}")
         finally:
             connection_sqlite.close()
-            del email_df, content_data, message_data
+            del email_df, content_data, message_data, parsed_data
 
 Fetching_Inbox().fetching_email()
 

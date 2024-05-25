@@ -4,3 +4,18 @@ SCOPE:
     "https://www.googleapis.com/auth/gmail.modify",
     "https://www.googleapis.com/auth/gmail.labels",
   ]
+
+CONDITION_SYMBOL:
+  Contains: "like"
+  Does not equal: "!="
+  Equals: "=="
+  Less than: "<"
+  Greater than: ">"
+  Does not Contain: "not like"
+
+Fields_References:
+  From: "e_from"
+  Subject: "subject"
+  Message: "message"
+  Received Date: "Date"
+  To: "e_to"
