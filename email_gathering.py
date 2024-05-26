@@ -1,5 +1,7 @@
 from os import path
 import base64
+import re
+from datetime import datetime
 from email import message_from_string
 import pandas as pd
 import sqlite3
@@ -31,10 +33,11 @@ class Fetching_Inbox:
                     # currently skipping this part as some of the emails has more numbers of object into it.
                     pass
                 else:
+                    print(re.findall(r",(.*)\+",parsed_data.get("Date"))[0].strip())
                     content_data = {
                         "e_from" : parsed_data.get("From"),
                         "e_to" : parsed_data.get("To"),
-                        "date" : parsed_data.get("Date"),
+                        "e_date" : datetime.strptime(re.findall(r",(.*)\+",parsed_data.get("Date"))[0].strip(),"%d %b %Y %H:%M:%S").strftime("%Y-%m-%d %H:%M"),
                         "message_id" : message_data.get("id"),
                         "content_type" : parsed_data.get("Content-Type"),
                         "content" : parsed_data.get_payload(),

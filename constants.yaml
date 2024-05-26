@@ -17,5 +17,5 @@ Fields_References:
   From: "e_from"
   Subject: "subject"
   Message: "message"
-  Received Date: "Date"
+  Date Received: "e_date"
   To: "e_to"

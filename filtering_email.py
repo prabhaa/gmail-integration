@@ -2,10 +2,17 @@ import sqlite3
 import os
 import yaml
 import json
+from datetime import datetime,timedelta
+# google ouath lib's
+from googleapiclient.discovery import build
+# other modules
+from Oauth_integration import OAuth_Token
 
 class Email_Parsing:
 
     def __init__(self):
+        # checking credential
+        self.creds = OAuth_Token().validating_credentials()
         # opening the constants file
         with open("constants.yaml","r") as data:
             self.constants = yaml.full_load(data.read())
@@ -22,6 +29,7 @@ class Email_Parsing:
 
     def search(self,predicate,condition):
         conditions = self.forming_conditions(predicate,condition)
+        print(conditions)
         # forming sqlite3 connections
         sql_connection = sqlite3.connect("DB/email_db")
         sql_cursor = sql_connection.cursor()
@@ -29,6 +37,8 @@ class Email_Parsing:
         mail_data = sql_cursor.execute(f"select message_id from inbox where {conditions}")
         mail_data = [dict(zip(map(lambda x : x[0],mail_data.description),i)) for i in mail_data.fetchall()]
         sql_connection.close()
+        print(mail_data)
+        raise
         return mail_data
 
     def forming_conditions(self,predicate,condition):
@@ -38,7 +48,14 @@ class Email_Parsing:
         concat_conditions = []
         for cond in condition:
             temp_cond = []
-            temp_cond.append(f"{self.constants['Fields_References'][cond['field_name']]} \
+            if cond["field_name"] == "Date Received":
+                temp_cond.append(f"{self.constants['Fields_References'][cond['field_name']]} between")
+                if cond['predicate'] == "Greater than":
+                    temp_cond.extend([datetime.now().strftime("%Y-%m-%d")," and ",(datetime.strptime(datetime.now().strftime("%Y-%m-%d"), "%Y-%m-%d") + timedelta(days=int(cond['value']))).strftime("%Y-%m-%d")])
+                else:
+                    temp_cond.extend([(datetime.strptime(datetime.now().strftime("%Y-%m-%d"), "%Y-%m-%d") - timedelta(days=int(cond['value']))).strftime("%Y-%m-%d")," and ",datetime.now().strftime("%Y-%m-%d")])
+            else:
+                temp_cond.append(f"{self.constants['Fields_References'][cond['field_name']]} \
                             {self.constants['CONDITION_SYMBOL'][cond['predicate']]} \
                             '%{cond['value']}%'") if self.constants['CONDITION_SYMBOL'][cond['predicate']] == 'like' \
                             else temp_cond.append(f"'{cond['value']}'")    
@@ -49,11 +66,15 @@ class Email_Parsing:
             return " or ".join(concat_conditions)
     
     def applying_filter(self):
+        service = build('gmail', 'v1', credentials=self.creds)
         num_rules = self.rules.keys()
         for rules in num_rules:
-            filtered_mail = self.search(self.rules.get(rules).get("predicates"),self.rules.get(rules).get("criteria"))
+            filtered_mail_ids = self.search(self.rules.get(rules).get("predicates"),self.rules.get(rules).get("criteria"))
             # filtered message id by applied rules
-            print(filtered_mail)
+            for ids in filtered_mail_ids:
+                print(ids)
+                for actions in self.rules.get(rules).get("action"):
+                    service.users().messages().modify(userId='me',id = ids["message_id"], body={"addLabelIds" : actions['addLabelIds'],"removeLabelIds":actions["removeLabelIds"]}).execute()
         return True
 
 
