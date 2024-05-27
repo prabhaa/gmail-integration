@@ -29,7 +29,6 @@ class Email_Parsing:
 
     def search(self,predicate,condition):
         conditions = self.forming_conditions(predicate,condition)
-        print(conditions)
         # forming sqlite3 connections
         sql_connection = sqlite3.connect("DB/email_db")
         sql_cursor = sql_connection.cursor()
@@ -37,7 +36,6 @@ class Email_Parsing:
         mail_data = sql_cursor.execute(f"select message_id from inbox where {conditions}")
         mail_data = [dict(zip(map(lambda x : x[0],mail_data.description),i)) for i in mail_data.fetchall()]
         sql_connection.close()
-        print(mail_data)
         raise
         return mail_data
 
@@ -51,9 +49,11 @@ class Email_Parsing:
             if cond["field_name"] == "Date Received":
                 temp_cond.append(f"{self.constants['Fields_References'][cond['field_name']]} between")
                 if cond['predicate'] == "Greater than":
-                    temp_cond.extend([datetime.now().strftime("%Y-%m-%d")," and ",(datetime.strptime(datetime.now().strftime("%Y-%m-%d"), "%Y-%m-%d") + timedelta(days=int(cond['value']))).strftime("%Y-%m-%d")])
+                    temp_cond.extend([datetime.now().strftime("%Y-%m-%d")," and ",
+                    (datetime.strptime(datetime.now().strftime("%Y-%m-%d"), "%Y-%m-%d") + timedelta(days=int(cond['value']))).strftime("%Y-%m-%d")])
                 else:
-                    temp_cond.extend([(datetime.strptime(datetime.now().strftime("%Y-%m-%d"), "%Y-%m-%d") - timedelta(days=int(cond['value']))).strftime("%Y-%m-%d")," and ",datetime.now().strftime("%Y-%m-%d")])
+                    temp_cond.extend([(datetime.strptime(datetime.now().strftime("%Y-%m-%d"), "%Y-%m-%d") - timedelta(days=int(cond['value']))).strftime("%Y-%m-%d"),
+                    " and ",datetime.now().strftime("%Y-%m-%d")])
             else:
                 temp_cond.append(f"{self.constants['Fields_References'][cond['field_name']]} \
                             {self.constants['CONDITION_SYMBOL'][cond['predicate']]} \
@@ -72,10 +72,11 @@ class Email_Parsing:
             filtered_mail_ids = self.search(self.rules.get(rules).get("predicates"),self.rules.get(rules).get("criteria"))
             # filtered message id by applied rules
             for ids in filtered_mail_ids:
-                print(ids)
                 for actions in self.rules.get(rules).get("action"):
-                    service.users().messages().modify(userId='me',id = ids["message_id"], body={"addLabelIds" : actions['addLabelIds'],"removeLabelIds":actions["removeLabelIds"]}).execute()
+                    try:
+                        service.users().messages().modify(userId='me',id = ids["message_id"], body={"addLabelIds" : actions['addLabelIds'],"removeLabelIds":actions["removeLabelIds"]}).execute()
+                    except BaseException as error:
+                        print(f"error in the gmail modify api and message id - {ids}")
         return True
-
 
 Email_Parsing().applying_filter()

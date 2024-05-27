@@ -21,8 +21,8 @@ class Fetching_Inbox:
     def fetching_email(self):
         try:
             service = build('gmail', 'v1', credentials=self.creds)
-            # Getting the list of emails from the inbox with a set limit of the first 10 records.
-            message_data = service.users().messages().list(userId='me', labelIds=['INBOX'],maxResults=10).execute()
+            # Getting the list of emails from the inbox with a set limit of the first 100 records.
+            message_data = service.users().messages().list(userId='me', labelIds=['INBOX'],maxResults=100).execute()
             messages = message_data.get('messages', [])
             inbox_data = []
             for ind_messages in messages:
